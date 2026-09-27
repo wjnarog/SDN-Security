@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from scapy.all import sniff, IP, TCP
 
 # Version value for OpenFlow 1.3
@@ -9,8 +10,12 @@ PACKET_IN = 10
 # OpenFlow header: 1 byte (verison) + 1 byte (type) + 2 bytes (length) + 4 bytes (xid) = 8 bytes
 OF_HEADER_LEN = 8
 
+# Threshold that traffic is considered DoS
+DOS_THRESHOLD = 1000
+
 # dict to store counts based on src IP + port
 counts = {}
+window_counts = {}
 
 def handle_pkt(pkt):
     # check if packet has IP and TCP headers
@@ -30,7 +35,10 @@ def handle_pkt(pkt):
     # store/update packet_in count value
     key = (pkt[IP].src, pkt[TCP].sport)
     counts[key] = counts.get(key,0) + hits
-    # print out the live info
+    # store packet_in count within a certain window for DoS protection
+    window_counts[key] = window_counts.get(key,0) + hits
+    
+    # print out the live info, if necessary
     #print(f"Packet_In from {key[0]}:{key[1]}  -->  current count is {counts[key]}")
 
 def count_packet_ins(payload):
@@ -70,6 +78,14 @@ def print_counts(interval):
     print("-" * 50)
     print(f"{'TOTAL':<30}{sum(counts.values()):>20}")
 
+def attack_check(threshold):
+    for (ip, port), count in window_counts.items():
+        if count > threshold:
+            print("\n" + "!" * 50)
+            print(f"ALERT: possible Dos from {ip}:{port}")
+            print(f"   {count} Packet_Ins this window (threshold {threshold})")
+            print("!" * 50 + "\n")
+
 def main():
     interval = 2
     
@@ -77,6 +93,8 @@ def main():
     while True:
         sniff(iface="lo", filter="tcp port 6653", prn=handle_pkt, store=False, timeout=interval)
         print_counts(interval)
+        attack_check(DOS_THRESHOLD)
+        window_counts.clear()
 
 if __name__ == "__main__":
     main()
