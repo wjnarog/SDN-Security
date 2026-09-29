@@ -98,7 +98,7 @@ def attack_check(threshold):
     
     return attackers
 
-def add_block_rule(attack_ip,attack_ip,controller_ip,controller_port):
+def add_block_rule(attack_ip,attack_sport,controller_ip,controller_port):
     # if the attacking port is already in blocked ports, move on
     attack_src = (attack_ip, attack_sport)
     if attack_src in blocked_ports:
