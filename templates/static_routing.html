@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+  <title>Static Routing</title>
+</head>
+<button onclick="location.href='/'"">Back to home</a></button>
+<body>
+  <h1>Static Routing</h1>
+  <p>Enter all of the below values to install a static flow entry on a switch.</p>
+ 
+  <form method="POST" action="/static_routing">
+    <p>
+      <label>DPID:
+        <input type="text" name="dpid" value="00:00:00:00:00:00:00:01" required>
+      </label>
+    </p>
+    <p>
+      <label>Priority:
+        <input type="text" name="priority" value="32768" required>
+      </label>
+    </p>
+    <p>
+      <label>In-Port:
+        <input type="text" name="in_port">
+      </label>
+    </p>
+    <p>
+      <label>Ethernet type:
+        <input type="text" name="eth_type" value="0x0800" required>
+      </label>
+    </p>
+    <p>
+      <label>Destination IP:
+        <input type="text" name="dst_ip">
+      </label>
+    </p>
+    <p>
+      <label>Action:
+        <select name="action">
+          <option value="flood">Flood</option>
+          <option value="1">Output port 1</option>
+          <option value="2">Output port 2</option>
+          <option value="3">Output port 3</option>
+          <option value="controller">Send to controller</option>
+        </select>
+      </label>
+    </p>
+    <p><button type="submit">Submit</button></p>
+  </form>
+ 
+  {% if result %}
+    <p><strong>Result:</strong> {{ result }}</p>
+  {% endif %}
+
+  <hr>
+  <form method="POST" action="/provision_basic_connectivity">
+    <button type="submit">Provision Full Connectivity (all 10 flows for lab4)</button>
+  </form>
+
+  <hr>
+  <h2>Installed Flows</h2>
+
+  {% for dpid, entries in flows.items() %}
+   <h3>Switch {{ dpid }}</h3>
+  <table border="1">
+    <tr><th>Number</th><th>Rule</th></tr>
+    {% for flow_entry in entries %}
+      {% set row_number = loop.index %}
+      {% for name, details in flow_entry.items() %}
+        <tr>
+          <td>{{ row_number }}</td>
+          <td>{{ details }}</td>
+          <td>
+              <form method="POST" action="/delete_flow" style="margin:0;">
+                <input type="hidden" name="flow_name" value="{{ name }}">
+                <input type="hidden" name="return_to" value="/static_routing">
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+  {% endfor %}
+
+</body>
+</html>

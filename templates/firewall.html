@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+  <title>Firewall</title>
+</head>
+<button onclick="location.href='/'"">Back to home</a></button>
+<body>
+  <h1>Firewall</h1>
+  <p>All traffic is blocked by default. Add a rule to permit specific traffic.</p>
+
+  <form method="POST" action="/firewall">
+    <p>
+      <label>DPID:
+        <input type="text" name="dpid" value="00:00:00:00:00:00:00:01" required>
+      </label>
+    </p>
+    <p>
+      <label>Priority:
+        <input type="text" name="priority" value="200" required>
+      </label>
+    </p>
+    <p>
+      <label>In-Port:
+        <input type="text" name="in_port" value="">
+      </label>
+    </p>
+    <p>
+      <label>Ethernet type:
+        <input type="text" name="eth_type" value="0x0800" required>
+      </label>
+    </p>
+    <p>
+      <label>Source IP:
+        <input type="text" name="src_ip" value="">
+      </label>
+    </p>
+    <p>
+      <label>Destination IP:
+        <input type="text" name="dst_ip" value="">
+      </label>
+    </p>
+    <p>
+      <label>Layer 4 protocol:
+        <select name="l4_proto">
+          <option value="">(any)</option>
+          <option value="0x01">ICMP (0x01)</option>
+          <option value="0x06">TCP (0x06)</option>
+          <option value="0x11">UDP (0x11)</option>
+        </select>
+      </label>
+    </p>
+    <p><button type="submit">Add Allow Rule</button></p>
+  </form>
+
+  {% if result %}
+    <p><strong>Result:</strong> {{ result }}</p>
+  {% endif %}
+
+  <hr>
+  <h2>Installed Rules</h2>
+
+  {% for dpid, entries in fw_rules.items() %}
+  <h3>Switch {{ dpid }}</h3>
+  <table border="1">
+    <tr>
+      <th>Number</th>
+      <th>Rule</th>
+    </tr>
+    {% for entry in entries %}
+      {% set row_number = loop.index %}
+      {% for name, details in entry.items() %}
+        <tr>
+          <td>{{ row_number }}</td>
+          <td>{{ details }}</td>
+          <td>
+              <form method="POST" action="/delete_flow" style="margin:0;">
+                <input type="hidden" name="flow_name" value="{{ name }}">
+                <input type="hidden" name="return_to" value="/firewall">
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+{% endfor %}
+
+</body>
+</html>
